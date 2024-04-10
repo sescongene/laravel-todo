@@ -1,0 +1,51 @@
+type Todo {
+    "Unique primary key."
+    id: ID!
+
+    "Todo title."
+    title: String!
+
+    "Todo Current Status."
+    title: String!
+
+    "The user that created the todo."
+    user: User!
+
+    "When the todo was created."
+    created_at: DateTime!
+
+    "When the todo was last updated."
+    updated_at: DateTime!
+}
+
+extend type Query {
+    "List multiple todos."
+    todos(
+        "Filters by title. Accepts SQL LIKE wildcards `%` and `_`."
+        title: String @where(operator: "like")
+        id: ID @eq
+    ): [Todo!]!
+        @paginate(defaultCount: 10)
+        @guard
+        @builder(method: "App\\GraphQL\\Builders\\TodoBuilder@byUser")
+}
+
+extend type Mutation {
+    "Create a new todo."
+    createTodo(
+        title: String! @rules(apply: ["required", "string", "max:255"])
+        status: String!
+            @rules(apply: ["required", "string", "in:todo,completed"])
+    ): Todo! @guard @create @inject(context: "user.id", name: "user_id")
+
+    "Update a todo."
+    updateTodo(
+        id: ID!
+        title: String! @rules(apply: ["required", "string", "max:255"])
+        status: String!
+            @rules(apply: ["required", "string", "in:todo,completed"])
+    ): Todo! @update @guard @can(ability: "update")
+
+    "Delete a todo."
+    deleteTodo(id: ID!): Todo @delete @guard
+}

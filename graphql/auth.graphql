@@ -1,0 +1,33 @@
+type Login {
+    "The user that logged in."
+    user: User!
+
+    "The token that can be used to authenticate further requests."
+    token: String
+}
+
+type Mutation {
+    "Log in to a new session and get the user."
+    login(email: String!, password: String!): Login!
+
+    "Log out from the current session, showing the user one last time."
+    logout: User @guard
+
+    "Register a new user and log them in."
+    register(
+        name: String! @rules(apply: ["required", "string", "max:255"])
+        email: String!
+            @rules(
+                apply: [
+                    "required"
+                    "string"
+                    "email"
+                    "max:255"
+                    "unique:users"
+                ]
+            )
+        password: String!
+            @rules(apply: ["required", "string", "min:8", "confirmed"])
+        password_confirmation: String!
+    ): Login!
+}
