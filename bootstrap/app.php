@@ -15,6 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->use([
             Nuwave\Lighthouse\Http\Middleware\AttemptAuthentication::class
         ]);
+        $middleware->append([
+            App\Http\Middleware\Cors::class
+        ]);
+        $middleware->validateCsrfTokens(except: [
+            'graphql'
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

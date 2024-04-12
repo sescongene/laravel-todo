@@ -6,7 +6,7 @@ type Todo {
     title: String!
 
     "Todo Current Status."
-    title: String!
+    status: String!
 
     "The user that created the todo."
     user: User!
@@ -19,6 +19,9 @@ type Todo {
 }
 
 extend type Query {
+    "Get 1 todo"
+    todo(id: ID @whereKey): Todo @find @guard @canResolved(ability: "view")
+
     "List multiple todos."
     todos(
         "Filters by title. Accepts SQL LIKE wildcards `%` and `_`."
@@ -34,8 +37,7 @@ extend type Mutation {
     "Create a new todo."
     createTodo(
         title: String! @rules(apply: ["required", "string", "max:255"])
-        status: String!
-            @rules(apply: ["required", "string", "in:todo,completed"])
+        status: String @rules(apply: ["in:todo,completed"])
     ): Todo! @guard @create @inject(context: "user.id", name: "user_id")
 
     "Update a todo."
@@ -44,8 +46,29 @@ extend type Mutation {
         title: String! @rules(apply: ["required", "string", "max:255"])
         status: String!
             @rules(apply: ["required", "string", "in:todo,completed"])
-    ): Todo! @update @guard @can(ability: "update")
+    ): Todo! @update @guard @can(ability: "update", find: "id")
+
+    "Toggle a todo. Switch from todo to completed and vice versa."
+    toggleTodo(id: ID! @whereKey): Todo!
+        @guard
+        @can(ability: "update", find: "id")
+        @field(
+            resolver: "App\\GraphQL\\Resolvers\\TodoResolver@resolveToggleTodo"
+        )
 
     "Delete a todo."
-    deleteTodo(id: ID!): Todo @delete @guard
+    deleteTodo(id: ID! @whereKey): Todo @delete @guard
+
+    "Complete a todo."
+    deleteDoneTodo: [Todo!]!
+        @guard
+        @field(
+            resolver: "App\\GraphQL\\Resolvers\\TodoResolver@resolveDeleteDone"
+        )
+
+    deleteAllTodo: Boolean!
+        @guard
+        @field(
+            resolver: "App\\GraphQL\\Resolvers\\TodoResolver@resolveDeleteAll"
+        )
 }

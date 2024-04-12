@@ -31,3 +31,10 @@ type Mutation {
         password_confirmation: String!
     ): Login!
 }
+
+extend type Query {
+    "Get the currently authenticated user."
+    me: User
+        @guard
+        @field(resolver: "App\\GraphQL\\Resolvers\\UserResolver@resolveMe")
+}
